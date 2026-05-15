@@ -1,0 +1,63 @@
+name: Upstream Check
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new upstream commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          open_issues=$(gh issue list --label "upstream-update" --state open --json number --jq 'length')
+          if [ "$open_issues" -gt 0 ]; then
+            echo "Open upstream issue already exists, skipping"
+            exit 0
+          fi
+
+          git remote add upstream https://github.com/mobile-shell/mosh.git
+          git fetch upstream master
+
+          # Last upstream commit incorporated into this fork
+          FORK_BASE="decd9b7"
+
+          NEW_COMMITS=$(git log --oneline "${FORK_BASE}..upstream/master" | wc -l | tr -d ' ')
+
+          if [ "$NEW_COMMITS" -eq 0 ]; then
+            echo "No new upstream commits"
+            exit 0
+          fi
+
+          COMMIT_LIST=$(git log --oneline "${FORK_BASE}..upstream/master")
+          UPSTREAM_HEAD=$(git rev-parse --short upstream/master)
+
+          BODY=$(cat <<EOF
+          Upstream \`mobile-shell/mosh\` has **${NEW_COMMITS} new commit(s)** since our fork base (\`${FORK_BASE}\`).
+
+          ### New commits
+          \`\`\`
+          ${COMMIT_LIST}
+          \`\`\`
+
+          Upstream HEAD: \`${UPSTREAM_HEAD}\`
+
+          **Action:** Review the commits for security fixes or breaking changes, then rebase or cherry-pick as needed. Close this issue when done.
+          EOF
+          )
+
+          gh label create "upstream-update" --description "New upstream commits detected" --color "0E8A16" 2>/dev/null || true
+          gh issue create \
+            --title "Upstream has ${NEW_COMMITS} new commit(s) since fork base" \
+            --label "upstream-update" \
+            --body "${BODY}"
