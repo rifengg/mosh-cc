@@ -40,8 +40,8 @@ Download the `.deb` from the
 The .deb is built on Ubuntu 22.04. For other versions, build from source.
 
 ```
-curl -LO https://github.com/rifengg/mosh-cc/releases/download/v1.5.0-cc.1/mosh-cc_1.5.0-cc.1_amd64.deb
-sudo dpkg -i mosh-cc_1.5.0-cc.1_amd64.deb
+curl -LO https://github.com/rifengg/mosh-cc/releases/download/v1.5.0-cc.2/mosh-cc_1.5.0-cc.2_amd64.deb
+sudo dpkg -i mosh-cc_1.5.0-cc.2_amd64.deb
 ```
 
 ### Build from source
