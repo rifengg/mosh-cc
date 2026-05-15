@@ -36,11 +36,12 @@ brew install mosh-cc
 ### Ubuntu/Debian (server, e.g. Hetzner VPS)
 
 Download the `.deb` from the
-[latest release](https://github.com/rifengg/mosh-cc/releases/latest):
+[latest release](https://github.com/rifengg/mosh-cc/releases/latest).
+The .deb is built on Ubuntu 22.04. For other versions, build from source.
 
 ```
-curl -LO https://github.com/rifengg/mosh-cc/releases/latest/download/mosh-cc_amd64.deb
-sudo dpkg -i mosh-cc_amd64.deb
+curl -LO https://github.com/rifengg/mosh-cc/releases/download/v1.5.0-cc.1/mosh-cc_1.5.0-cc.1_amd64.deb
+sudo dpkg -i mosh-cc_1.5.0-cc.1_amd64.deb
 ```
 
 ### Build from source
@@ -51,7 +52,7 @@ sudo apt install protobuf-compiler libprotobuf-dev libutempter-dev \
 
 git clone https://github.com/rifengg/mosh-cc.git
 cd mosh-cc
-./autogen.sh && ./configure && make
+./autogen.sh && ./configure --program-suffix=-cc && make
 sudo make install
 ```
 
@@ -64,13 +65,13 @@ If only one side has the patches, you'll get stock Mosh behavior for the missing
 (dim text won't render as dim, etc.) — nothing breaks, you just don't get the fix.
 
 ```
-mosh user@your-vps.example.com
+mosh-cc user@your-vps.example.com
 ```
 
 To use the patched server explicitly (e.g. if stock Mosh is also installed):
 
 ```
-mosh --server=/usr/local/bin/mosh-server user@your-vps.example.com
+mosh --server=/usr/local/bin/mosh-server-cc user@your-vps.example.com
 ```
 
 ## License

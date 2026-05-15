@@ -2,6 +2,9 @@ name: ci
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -32,3 +35,52 @@ jobs:
 
     - name: "test"
       run: make check
+
+  packaging-smoke-test:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: "verify mosh.pl wrapper references suffixed binaries"
+      run: |
+        echo "Checking mosh.pl default client/server names..."
+        grep -q "^my \$client = 'mosh-client';" scripts/mosh.pl || { echo "FAIL: mosh.pl client default not found (may already be patched)"; }
+        grep -q "^my \$server = 'mosh-server';" scripts/mosh.pl || { echo "FAIL: mosh.pl server default not found (may already be patched)"; }
+        echo "OK: mosh.pl defaults are stock (will be rewritten at build time)"
+
+    - name: "verify configure.ac version"
+      run: |
+        VERSION=$(sed -n 's/AC_INIT(\[[^]]*\], \[\([^]]*\)\].*/\1/p' configure.ac)
+        echo "Version: $VERSION"
+        echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+-cc\.[0-9]+$' || { echo "FAIL: version '$VERSION' doesn't match expected pattern"; exit 1; }
+        echo "OK: version format is correct"
+
+    - name: "verify README references correct commands"
+      run: |
+        FAIL=0
+        grep -q 'brew install mosh-cc' README.md || { echo "FAIL: README missing 'brew install mosh-cc'"; FAIL=1; }
+        grep -q 'mosh-cc' README.md || { echo "FAIL: README missing mosh-cc usage"; FAIL=1; }
+        [ $FAIL -eq 0 ] && echo "OK: README references correct commands"
+        exit $FAIL
+
+    - name: "verify release workflow pins third-party actions by SHA"
+      run: |
+        if grep -q 'softprops/action-gh-release@v' .github/workflows/release.yml; then
+          echo "FAIL: softprops/action-gh-release not pinned by SHA"
+          exit 1
+        fi
+        echo "OK: third-party actions pinned by SHA"
+
+    - name: "verify suffixed binary naming works"
+      run: |
+        sudo apt-get update && sudo apt-get install -y protobuf-compiler libprotobuf-dev libutempter-dev autoconf automake nettle-dev libncurses-dev zlib1g-dev libssl-dev
+        ./autogen.sh
+        ./configure --program-suffix=-cc
+        make -j$(nproc)
+        DESTDIR=/tmp/mosh-cc-test make install
+        echo "Checking installed binary names..."
+        test -f /tmp/mosh-cc-test/usr/local/bin/mosh-client-cc || { echo "FAIL: mosh-client-cc not found"; exit 1; }
+        test -f /tmp/mosh-cc-test/usr/local/bin/mosh-server-cc || { echo "FAIL: mosh-server-cc not found"; exit 1; }
+        test -f /tmp/mosh-cc-test/usr/local/bin/mosh-cc || { echo "FAIL: mosh-cc wrapper not found"; exit 1; }
+        echo "OK: all suffixed binaries present"

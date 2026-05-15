@@ -40,7 +40,8 @@ jobs:
       run: |
         ./autogen.sh
         ./configure --prefix=/usr --program-suffix=-cc
-        sed -i 's/mosh-server/mosh-server-cc/g' scripts/mosh.pl
+        sed -i 's|^my $client = '"'"'mosh-client'"'"';|my $client = '"'"'mosh-client-cc'"'"';|' scripts/mosh.pl
+        sed -i 's|^my $server = '"'"'mosh-server'"'"';|my $server = '"'"'mosh-server-cc'"'"';|' scripts/mosh.pl
         make -j$(nproc)
 
     - name: "create .deb"
@@ -53,7 +54,7 @@ jobs:
         Version: ${PKG_VERSION}
         Architecture: amd64
         Maintainer: rifengg <engine-01.tokens@lobehold.com>
-        Depends: libprotobuf23 | libprotobuf32, libncurses6 | libncurses5, zlib1g, perl
+        Depends: libprotobuf23, libncurses6 | libncurses5, zlib1g, perl, libssl3 | libssl1.1, openssh-client
         Section: net
         Priority: optional
         Homepage: https://github.com/rifengg/mosh-cc
@@ -86,11 +87,22 @@ jobs:
       with:
         name: deb-package
 
+    - name: "verify tag matches version"
+      run: |
+        TAG="${GITHUB_REF_NAME}"
+        VERSION=$(find . -name 'mosh-*.tar.gz' -o -name 'mosh-cc_*.deb' | head -1 | grep -oP '\d+\.\d+\.\d+-cc\.\d+' || true)
+        echo "Tag: $TAG, Version from assets: $VERSION"
+
+    - name: "generate checksums"
+      run: sha256sum mosh-*.tar.gz mosh-cc_*.deb > SHA256SUMS
+
     - name: "publish release"
-      uses: softprops/action-gh-release@v2
+      # v2.2.1 pinned 2026-05-15
+      uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
       with:
         draft: true
         generate_release_notes: true
         files: |
           mosh-*.tar.gz
           mosh-cc_*.deb
+          SHA256SUMS

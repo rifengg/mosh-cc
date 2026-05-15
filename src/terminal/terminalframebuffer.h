@@ -63,6 +63,7 @@ public:
     strikethrough,
     SIZE
   } attribute_type;
+  static_assert( SIZE <= 8, "Renditions::attributes bitfield is 8 bits" );
 
 private:
   static const uint64_t true_color_mask = 0x1000000;

@@ -39,3 +39,6 @@ src/include/stamp-h1
 /VERSION.stamp
 /scripts/mosh
 src/include/version.h
+
+# Local records directory (tool artifact metadata, not part of the fork)
+/records/
