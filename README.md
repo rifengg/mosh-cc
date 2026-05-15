@@ -35,13 +35,17 @@ brew install mosh-cc
 
 ### Ubuntu/Debian (server, e.g. Hetzner VPS)
 
-Download the `.deb` from the
+Download the `.deb` for your Ubuntu version from the
 [latest release](https://github.com/rifengg/mosh-cc/releases/latest).
-The .deb is built on Ubuntu 22.04. For other versions, build from source.
 
 ```
-curl -LO https://github.com/rifengg/mosh-cc/releases/download/v1.5.0-cc.2/mosh-cc_1.5.0-cc.2_amd64.deb
-sudo dpkg -i mosh-cc_1.5.0-cc.2_amd64.deb
+# Ubuntu 22.04 (Jammy)
+curl -LO https://github.com/rifengg/mosh-cc/releases/download/v1.5.0-cc.2/mosh-cc_1.5.0-cc.2_jammy_amd64.deb
+sudo dpkg -i mosh-cc_1.5.0-cc.2_jammy_amd64.deb
+
+# Ubuntu 24.04 (Noble)
+curl -LO https://github.com/rifengg/mosh-cc/releases/download/v1.5.0-cc.2/mosh-cc_1.5.0-cc.2_noble_amd64.deb
+sudo dpkg -i mosh-cc_1.5.0-cc.2_noble_amd64.deb
 ```
 
 ### Build from source

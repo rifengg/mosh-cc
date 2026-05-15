@@ -28,7 +28,18 @@ jobs:
         path: mosh-*.tar.gz
 
   deb-package:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            distro: jammy
+            protobuf_dep: libprotobuf23
+            ssl_dep: "libssl3 | libssl1.1"
+          - os: ubuntu-24.04
+            distro: noble
+            protobuf_dep: libprotobuf32t64
+            ssl_dep: libssl3t64
 
     steps:
     - uses: actions/checkout@v4
@@ -47,14 +58,14 @@ jobs:
     - name: "create .deb"
       run: |
         PKG_VERSION=$(sed -n 's/AC_INIT(\[[^]]*\], \[\([^]]*\)\].*/\1/p' configure.ac)
-        PKG_DIR="mosh-cc_${PKG_VERSION}_amd64"
+        PKG_DIR="mosh-cc_${PKG_VERSION}_${{ matrix.distro }}_amd64"
         mkdir -p "${PKG_DIR}/DEBIAN"
         cat > "${PKG_DIR}/DEBIAN/control" <<CTRL
         Package: mosh-cc
         Version: ${PKG_VERSION}
         Architecture: amd64
         Maintainer: rifengg <engine-01.tokens@lobehold.com>
-        Depends: libprotobuf23, libncurses6 | libncurses5, zlib1g, perl, libssl3 | libssl1.1, openssh-client
+        Depends: ${{ matrix.protobuf_dep }}, libncurses6 | libncurses5, zlib1g, perl, ${{ matrix.ssl_dep }}, openssh-client
         Section: net
         Priority: optional
         Homepage: https://github.com/rifengg/mosh-cc
@@ -69,7 +80,7 @@ jobs:
     - name: "upload deb artifact"
       uses: actions/upload-artifact@v4
       with:
-        name: deb-package
+        name: deb-${{ matrix.distro }}
         path: mosh-cc_*.deb
 
   publish-release:
@@ -85,7 +96,11 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: deb-package
+        name: deb-jammy
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: deb-noble
 
     - name: "verify tag matches version"
       run: |
