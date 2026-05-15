@@ -104,9 +104,11 @@ jobs:
 
     - name: "verify tag matches version"
       run: |
-        TAG="${GITHUB_REF_NAME}"
-        VERSION=$(find . -name 'mosh-*.tar.gz' -o -name 'mosh-cc_*.deb' | head -1 | grep -oP '\d+\.\d+\.\d+-cc\.\d+' || true)
-        echo "Tag: $TAG, Version from assets: $VERSION"
+        TAG="${GITHUB_REF_NAME#v}"
+        VERSION=$(find . -name 'mosh-*.tar.gz' | sed -nE 's|.*/mosh-(.+)\.tar\.gz|\1|p')
+        echo "Tag version: $TAG, Asset version: $VERSION"
+        [ -n "$VERSION" ] || { echo "FAIL: could not extract version from tarball filename"; exit 1; }
+        [ "$TAG" = "$VERSION" ] || { echo "FAIL: tag $TAG != asset version $VERSION"; exit 1; }
 
     - name: "generate checksums"
       run: sha256sum mosh-*.tar.gz mosh-cc_*.deb > SHA256SUMS

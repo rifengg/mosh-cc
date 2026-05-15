@@ -45,8 +45,8 @@ jobs:
     - name: "verify mosh.pl wrapper references suffixed binaries"
       run: |
         echo "Checking mosh.pl default client/server names..."
-        grep -q "^my \$client = 'mosh-client';" scripts/mosh.pl || { echo "FAIL: mosh.pl client default not found (may already be patched)"; }
-        grep -q "^my \$server = 'mosh-server';" scripts/mosh.pl || { echo "FAIL: mosh.pl server default not found (may already be patched)"; }
+        grep -q "^my \$client = 'mosh-client';" scripts/mosh.pl || { echo "FAIL: mosh.pl client default not found (may already be patched)"; exit 1; }
+        grep -q "^my \$server = 'mosh-server';" scripts/mosh.pl || { echo "FAIL: mosh.pl server default not found (may already be patched)"; exit 1; }
         echo "OK: mosh.pl defaults are stock (will be rewritten at build time)"
 
     - name: "verify configure.ac version"
