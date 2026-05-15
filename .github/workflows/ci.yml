@@ -9,18 +9,13 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-22.04, ubuntu-24.04]
-        crypto: [auto]
-        include:
-          - crypto: nettle
-            os: ubuntu-22.04
-        
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: "setup linux build environment"
       if: ${{ startsWith(matrix.os, 'ubuntu') }}
-      run: sudo apt update && sudo apt install -y protobuf-compiler libprotobuf-dev libutempter-dev autoconf automake nettle-dev
+      run: sudo apt-get update && sudo apt-get install -y protobuf-compiler libprotobuf-dev libutempter-dev autoconf automake nettle-dev
 
     - name: "setup macos build environment"
       if: ${{ startsWith(matrix.os, 'macos') }}
@@ -29,11 +24,11 @@ jobs:
     - name: "generate build scripts"
       run: ./autogen.sh
 
-    - name: ${{ format('configure (crypto {0})', matrix.crypto) }}
-      run: ./configure --enable-compile-warnings=error --enable-examples ${{ (matrix.crypto != 'auto' && format('--with-crypto-library={0}', matrix.crypto)) || '' }}
+    - name: "configure"
+      run: ./configure --enable-compile-warnings=error
 
     - name: "build"
-      run: make V=1
+      run: make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
     - name: "test"
-      run: make V=1 check
+      run: make check
